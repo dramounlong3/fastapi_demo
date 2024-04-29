@@ -1,4 +1,5 @@
-from fastapi import FastAPI,Request, File, UploadFile
+import json
+from fastapi import FastAPI,Request, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from io import BytesIO
@@ -17,7 +18,10 @@ async def test(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post('/upload', response_class=HTMLResponse)
-async def upload_excel(request: Request, upload_excel: UploadFile = File(...)):
+async def upload_excel(request: Request, 
+                       upload_excel: UploadFile = File(...), 
+                       username: str = Form(...), 
+                       password: str = Form(...)):
 
     if upload_excel.filename.endswith(".xlsx"):
         excel_content = await upload_excel.read()
@@ -27,4 +31,7 @@ async def upload_excel(request: Request, upload_excel: UploadFile = File(...)):
         df = pd.read_excel(excel_buffer)
 
         print(df)
-    return templates.TemplateResponse("index.html", {"request": request})
+        
+        # json_data = df.to_json(orient="records")
+        json_data = json.dumps({"response": "ok", "username":username, "password": password})
+    return json_data

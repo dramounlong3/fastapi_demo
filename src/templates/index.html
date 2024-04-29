@@ -4,12 +4,113 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Upload Excel File</title>
+    <style>
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .title {
+        margin-top: 0;
+        text-align: center;
+      }
+      .form-group {
+        margin-top: 20px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .form-group input[type="file"],
+      .form-group input[type="text"],
+      .form-group input[type="password"],
+      .form-group button {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        box-sizing: border-box;
+      }
+      .form-group button {
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+      }
+      .form-group button:hover {
+        background-color: #0056b3;
+      }
+      .message {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        white-space: pre-wrap;
+      }
+    </style>
   </head>
   <body>
-    <h1>Upload Excel File</h1>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="upload_excel" accept=".xlsx" required />
-      <button type="submit">Upload</button>
-    </form>
+    <div class="container">
+      <h1 class="title">Upload Excel File</h1>
+      <form
+        class="form"
+        action="/upload"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <div class="form-group">
+          <label for="upload_excel">Select Excel File:</label>
+          <input
+            type="file"
+            name="upload_excel"
+            id="upload_excel"
+            accept=".xlsx"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" name="username" id="username" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" name="password" id="password" required />
+        </div>
+        <div class="form-group">
+          <button type="submit" onclick="submitForm(event)">Upload</button>
+        </div>
+      </form>
+      <div class="message"></div>
+    </div>
+
+    <script>
+      async function submitForm(event) {
+        event.preventDefault(); // 防止表單默認提交行為
+
+        const form = document.querySelector(".form");
+        const formData = new FormData(form);
+
+        try {
+          const response = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (response.ok) {
+            const data = await response.json(); // 解析 JSON 格式的回傳訊息
+            const messageDiv = document.querySelector(".message");
+            messageDiv.textContent = JSON.stringify(data, null, 2); // 將回傳訊息美化並顯示在 messageDiv 元素中
+          } else {
+            console.error("Upload failed:", response.statusText);
+          }
+        } catch (error) {
+          console.error("Error during upload:", error);
+        }
+      }
+    </script>
   </body>
 </html>
