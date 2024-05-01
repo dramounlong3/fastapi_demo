@@ -7,7 +7,7 @@ import pandas as pd
 
 app = FastAPI()
 
-templates = Jinja2Templates(directory="./src./templates")
+templates = Jinja2Templates(directory="./src/templates")
 
 @app.get('/')
 async def my():
