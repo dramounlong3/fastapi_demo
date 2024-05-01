@@ -15,7 +15,7 @@ async def my():
 
 @app.get('/test')
 async def test(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request, "var1": {"text": "SOME INFO. FROM SERVER"}})
 
 @app.post('/upload', response_class=HTMLResponse)
 async def upload_excel(request: Request, 
