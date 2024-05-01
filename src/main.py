@@ -36,4 +36,4 @@ async def upload_excel(request: Request,
         json_data = json.dumps({"response": "ok", "username":username, "password": password})
         return json_data
     else:
-        raise HTTPException(status_code=400, detail="the file extension needs be xlsx.")
+        raise HTTPException(status_code=400, detail="the file extension needs to be xlsx.")

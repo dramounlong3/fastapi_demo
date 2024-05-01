@@ -106,7 +106,10 @@
             const messageDiv = document.querySelector(".message");
             messageDiv.textContent = JSON.stringify(data, null, 2); // 將回傳訊息美化並顯示在 messageDiv 元素中
           } else {
-            console.error("Upload failed:", response.statusText);
+            const errorMessage = await response.text(); // 解析文本格式的錯誤信息
+            console.error("Upload failed:", errorMessage);
+            const messageDiv = document.querySelector(".message");
+            messageDiv.textContent = errorMessage; // 將錯誤信息顯示在 messageDiv 元素中
           }
         } catch (error) {
           console.error("Error during upload:", error);
