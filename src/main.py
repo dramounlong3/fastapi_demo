@@ -1,5 +1,5 @@
 import json
-from fastapi import FastAPI,Request, File, UploadFile, Form
+from fastapi import FastAPI, HTTPException,Request, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from io import BytesIO
@@ -34,4 +34,6 @@ async def upload_excel(request: Request,
         
         # json_data = df.to_json(orient="records")
         json_data = json.dumps({"response": "ok", "username":username, "password": password})
-    return json_data
+        return json_data
+    else:
+        raise HTTPException(status_code=400, detail="the file extension needs be xlsx.")
