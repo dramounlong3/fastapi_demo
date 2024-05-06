@@ -23,13 +23,14 @@ async function submitForm(event) {
       //   console.error("Upload failed:", errorMessage);
       console.log(`test bad request ${typeof errorMessage}`);
       const responseObject = JSON.parse(errorMessage);
+      console.log(`typeof responseObject ${typeof responseObject}`);
       console.log(
-        `responseObject.detail.status_code ${responseObject.detail.status_code}`
+        `responseObject.detail.jsss ${typeof responseObject.detail.jsss}`
       );
       const messageDiv = document.querySelector(".message");
       //   messageDiv.textContent = errorMessage; // 將錯誤信息顯示在 messageDiv 元素中
-      messageDiv.textContent =
-        responseObject.detail.status_code + responseObject.detail.reason; // 將錯誤信息顯示在 messageDiv 元素中
+      const jsssObj = JSON.parse(responseObject.detail.jsss);
+      messageDiv.textContent = jsssObj.username;
     }
   } catch (error) {
     console.log("第3段");
