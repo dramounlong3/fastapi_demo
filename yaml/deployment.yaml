@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pbiauto
+  labels:
+    app: pbiauto
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pbiauto
+  template:
+    metadata:
+      labels:
+        app: pbiauto
+    spec:
+      containers:
+        - name: pbiauto
+          image: philips09/myimage:1.0.7
+          ports:
+            - containerPort: 80
