@@ -46,8 +46,19 @@ async def upload_excel(request: Request,
         excel_buffer = BytesIO(excel_content)
 
         df = pd.read_excel(excel_buffer)
+        
+        print("before write")
+        
+        # 保存 Excel 文件到主机上的目录
+        save_path = "/path/to/save/excel/"  # 将该路径修改为你想要保存的目录
+        os.makedirs(save_path, exist_ok=True)
+        
+        excel_file_path = os.path.join(save_path, upload_excel.filename)
+        with open(excel_file_path, "wb") as f:
+            f.write(excel_content)
 
         print(df)
+        print("excel_file_path", os.path)
         
         # json_data = df.to_json(orient="records")
         json_data = json.dumps({"response": "ok", "username":username, "password": password})

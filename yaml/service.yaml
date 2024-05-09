@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: pbiauto-service
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: pbiauto
   ports:
