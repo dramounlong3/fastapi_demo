@@ -47,22 +47,32 @@ async def upload_excel(request: Request,
 
         df = pd.read_excel(excel_buffer)
         
-        print("before write")
-        
         # 保存 Excel 文件到主机上的目录
         save_path = "/path/to/save/excel/"  # 将该路径修改为你想要保存的目录
         os.makedirs(save_path, exist_ok=True)
         
-        excel_file_path = os.path.join(save_path, upload_excel.filename)
-        with open(excel_file_path, "wb") as f:
-            f.write(excel_content)
+        # excel_file_path = os.path.join(save_path, upload_excel.filename)
+        # with open(excel_file_path, "wb") as f:
+        #     f.write(excel_content)
+        
+        print(1)
+        print("os.path.splitext(upload_excel.filename)[1]\n", os.path.splitext(upload_excel.filename)[1]) 
+        print(2)
+        
+        try:
+            save_path += f'{upload_excel.filename}'
+            # 使用 DataFrame 的 to_excel() 方法將資料儲存到 Excel 檔案中
+            df.to_excel(save_path, index=False)
+        except Exception as e:
+            print("進到valueError")
+            print("e是啥:\n", str(e))
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
         print(df)
-        print("excel_file_path", os.path)
         
         # json_data = df.to_json(orient="records")
         json_data = json.dumps({"response": "ok", "username":username, "password": password})
         # return json_data
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status_code":400, "reason":"bad request", "jsss": json_data})
+        raise HTTPException(status_code=status.HTTP_200_OK, detail={"status_code":200, "reason":"good request", "jsss": json_data})
     else:
         raise HTTPException(status_code=400, detail="the file extension needs to be xlsx.")
