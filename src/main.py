@@ -20,6 +20,10 @@ print(sit_ip)
 print(uat_ip)
 print(prod_ip)
 
+my_server = os.getenv('MY_SERVER')
+my_user = os.getenv('MY_USER')
+my_password = os.getenv('MY_PASSWORD')
+
 
 
 app = FastAPI()
@@ -70,9 +74,25 @@ async def upload_excel(request: Request,
 
         print(df)
         
+        env_var = {
+            "sit_ip": sit_ip,
+            "uat_ip": uat_ip,
+            "prod_ip": prod_ip
+        }
+        
+        my_var = {
+            "my_server": my_server,
+            "my_user": my_user,
+            "my_password": my_password
+        }
+        
         # json_data = df.to_json(orient="records")
-        json_data = json.dumps({"response": "ok", "username":username, "password": password})
+        json_data = json.dumps({"response": "ok", "username":username, "password": password, "env_var": env_var, "my_var": my_var})
         # return json_data
-        raise HTTPException(status_code=status.HTTP_200_OK, detail={"status_code":200, "reason":"good request", "jsss": json_data})
+        # raise HTTPException(status_code=status.HTTP_200_OK, detail={"status_code":200, "reason":"good request", "jsss": json_data})
+        
+
+        return  json_data
+        
     else:
         raise HTTPException(status_code=400, detail="the file extension needs to be xlsx.")

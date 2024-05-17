@@ -16,6 +16,22 @@ spec:
     spec:
       containers:
         - name: pbiauto
-          image: philips09/myimage:1.0.8
+          image: philips09/myimage:1.0.12
           ports:
             - containerPort: 80
+          env:
+            - name: MY_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: pbiauto-config
+                  key: DB_SERVER
+            - name: MY_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: pbiauto-config
+                  key: DB_USER
+            - name: MY_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: pbiauto-config
+                  key: DB_PASSWORD
