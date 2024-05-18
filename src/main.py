@@ -10,6 +10,11 @@ import socket
 from starlette.staticfiles import StaticFiles
 import pymssql
 
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.backends import default_backend
+import base64
+
 load_dotenv()
 
 hostname = socket.gethostname()
@@ -21,10 +26,126 @@ print(sit_ip)
 print(uat_ip)
 print(prod_ip)
 
-my_server = os.getenv('MY_SERVER')
-my_user = os.getenv('MY_USER')
-my_password = os.getenv('MY_PASSWORD')
+my_server = os.getenv('REPORT_SERVER')
+my_user = os.getenv('DB_AD_ACCOUNT')
+secret_password = os.getenv('DB_PASSWORD')
+# print("my_server", my_server)
+# print("my_user", my_user)
+# print("my_password", my_password)
 
+# def encrypt_password(password, secret_key_hex):
+
+#     # Convert the hex string to bytes
+#     key = bytes.fromhex(secret_key_hex)
+    
+#     # Generate a random IV (initialization vector)
+#     iv = os.urandom(16)
+    
+#     # Pad the password to ensure it's a multiple of the block size (16 bytes for AES)
+#     padder = padding.PKCS7(algorithms.AES.block_size).padder()
+#     padded_data = padder.update(password.encode()) + padder.finalize()
+    
+#     # Encrypt the padded password
+#     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+#     encryptor = cipher.encryptor()
+#     encrypted_password = encryptor.update(padded_data) + encryptor.finalize()
+    
+#     # Combine IV and encrypted password and encode with base64
+#     encrypted_data = base64.b64encode(iv + encrypted_password).decode()
+#     return encrypted_data
+
+# def decrypt_password(encrypted_data, secret_key_hex):
+#     # Convert the hex string to bytes
+#     print(11)
+#     key = bytes.fromhex(secret_key_hex)
+#     print(22)
+    
+#     # 因從secret取出來時base64已解碼
+#     # Decode the base64 encoded data
+#     encrypted_data = base64.b64decode(encrypted_data)
+    
+#     # Extract the IV and the encrypted password
+#     iv = encrypted_data[:16]
+#     print(33)
+#     encrypted_password = encrypted_data[16:]
+#     print(44)
+#     # Decrypt the password
+#     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+#     print(55)
+#     decryptor = cipher.decryptor()
+#     print(66)
+#     padded_password = decryptor.update(encrypted_password) + decryptor.finalize()
+#     print(77)
+    
+#     # Unpad the password
+#     unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+#     print(88)
+#     password = unpadder.update(padded_password) + unpadder.finalize()
+#     print(99)
+#     return password.decode()
+
+def encrypt_password(password, secret_key_hex):
+    # Convert the hex string to bytes
+    key = bytes.fromhex(secret_key_hex)
+    
+    # Generate a random IV (initialization vector)
+    iv = os.urandom(16)
+    
+    # Pad the password to ensure it's a multiple of the block size (16 bytes for AES)
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(password.encode()) + padder.finalize()
+    
+    # Encrypt the padded password
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    encrypted_password = encryptor.update(padded_data) + encryptor.finalize()
+    
+    # Combine IV and encrypted password and convert to hex string
+    encrypted_data = iv + encrypted_password
+    encrypted_hex = encrypted_data.hex()
+    print("encrypted_hex", encrypted_hex)
+    
+    # Encode the hex string to base64
+    encrypted_base64 = base64.b64encode(encrypted_hex.encode()).decode()
+    print("encrypted_base64", encrypted_base64)
+    
+    return encrypted_base64
+
+def decrypt_password(encrypted_hex, secret_key_hex):
+    # Convert the hex string to bytes
+    key = bytes.fromhex(secret_key_hex)
+    
+    # Decode the base64 string to hex string
+    # k8s will decode base64 actively
+    # encrypted_hex = base64.b64decode(encrypted_base64).decode()
+    
+    # Convert the encrypted hex string back to bytes
+    encrypted_data = bytes.fromhex(encrypted_hex)
+    
+    # Extract the IV and the encrypted password
+    iv = encrypted_data[:16]
+    encrypted_password = encrypted_data[16:]
+    
+    # Decrypt the password
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    decryptor = cipher.decryptor()
+    padded_password = decryptor.update(encrypted_password) + decryptor.finalize()
+    
+    # Unpad the password
+    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+    password = unpadder.update(padded_password) + unpadder.finalize()
+    
+    return password.decode()
+
+
+
+secret_key_hex = '55519d41df5220b2e6e544fb1ad863b6f010111b09ad9c7bae987f46380b685b'
+# 取得密碼加密後轉16進制的base64字串
+result_en_pwd = encrypt_password('19890729', secret_key_hex)
+print("result_en_pwd", result_en_pwd)
+# 測試的參數必須先手動解開base64
+# final_result_pwd = decrypt_password(result_en_pwd, secret_key_hex)
+# print("final_result_pwd", final_result_pwd)
 
 
 app = FastAPI()
@@ -81,10 +202,17 @@ async def upload_excel(request: Request,
             "prod_ip": prod_ip
         }
         
+        secret_key_hex = '55519d41df5220b2e6e544fb1ad863b6f010111b09ad9c7bae987f46380b685b'
+        
+        # 解密secret拿回來的值
+        decrypt_pwd = decrypt_password(secret_password, secret_key_hex)
+        
+        
         my_var = {
             "my_server": my_server,
             "my_user": my_user,
-            "my_password": my_password
+            "my_encrypt_password": secret_password,
+            "my_password": decrypt_pwd
         }
         
         # my_var = {

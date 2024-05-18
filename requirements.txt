@@ -2,8 +2,10 @@ aiofiles==23.2.1
 annotated-types==0.6.0
 anyio==4.3.0
 certifi==2024.2.2
+cffi==1.16.0
 click==8.1.7
 colorama==0.4.6
+cryptography==42.0.7
 dnspython==2.6.1
 email_validator==2.1.1
 et-xmlfile==1.1.0
@@ -21,6 +23,7 @@ numpy==1.26.4
 openpyxl==3.1.2
 orjson==3.10.1
 pandas==2.2.2
+pycparser==2.22
 pydantic==2.7.1
 pydantic-extra-types==2.7.0
 pydantic-settings==2.2.1
