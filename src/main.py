@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 import socket
 from starlette.staticfiles import StaticFiles
+import pymssql
 
 load_dotenv()
 
@@ -86,11 +87,45 @@ async def upload_excel(request: Request,
             "my_password": my_password
         }
         
+        # my_var = {
+        #     "my_server": "172.21.176.1",
+        #     "my_user": "sa",
+        #     "my_password": "19890729"
+        # }
+        print("my_var['my_server']", my_var['my_server'])
+        
+        # test connect to DB.
+        try:
+            #使用windows認證登入
+            # with pymssql.connect(host = 'TWTPESQLDV2', database = 'BI_ETL') as conn:
+            #使用帳密登入
+            with pymssql.connect(server = my_var['my_server'], database = 'BI_Data_Alert', user = my_var['my_user'], password = my_var['my_password']) as conn:
+            # with pymssql.connect(host = "172.21.176.1", user = "sa", password = "19890729", database = "BI_Data_Alert") as conn:
+                with conn.cursor() as cursor:
+                    sql_query = '''
+                        SELECT * FROM dbo.Project
+                    '''
+                    cursor.execute(sql_query)
+                    # conn.commit() #使用insert才需要commit
+
+                    #迭代撈取到的資料
+                    rows = cursor.fetchall()
+                    #轉成list
+                    project_raw_data = [list(row) for row in rows]
+        except Exception as e:
+            print("Something error: ", str(e))
+        
         # json_data = df.to_json(orient="records")
-        json_data = json.dumps({"response": "ok", "username":username, "password": password, "env_var": env_var, "my_var": my_var})
+        json_data = json.dumps({
+                "response": "ok",
+                "username":username,
+                "password": password,
+                "env_var": env_var,
+                "my_var": my_var,
+                "project_raw_data": project_raw_data
+            })
         # return json_data
         # raise HTTPException(status_code=status.HTTP_200_OK, detail={"status_code":200, "reason":"good request", "jsss": json_data})
-        
 
         return  json_data
         

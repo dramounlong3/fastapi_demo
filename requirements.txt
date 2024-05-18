@@ -25,6 +25,7 @@ pydantic==2.7.1
 pydantic-extra-types==2.7.0
 pydantic-settings==2.2.1
 pydantic_core==2.18.2
+pymssql==2.3.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-multipart==0.0.9

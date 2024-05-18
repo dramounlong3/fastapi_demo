@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: pbiauto
-          image: philips09/myimage:1.0.12
+          image: philips09/myimage:1.0.18
           ports:
             - containerPort: 80
           env:
