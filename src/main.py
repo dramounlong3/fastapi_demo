@@ -33,56 +33,16 @@ secret_password = os.getenv('DB_PASSWORD')
 # print("my_user", my_user)
 # print("my_password", my_password)
 
-# def encrypt_password(password, secret_key_hex):
+def testenv():
+    with open('.env', 'r') as f:
+        for line in f:
+            print("YA: ", line.strip())
+testenv()
 
-#     # Convert the hex string to bytes
-#     key = bytes.fromhex(secret_key_hex)
-    
-#     # Generate a random IV (initialization vector)
-#     iv = os.urandom(16)
-    
-#     # Pad the password to ensure it's a multiple of the block size (16 bytes for AES)
-#     padder = padding.PKCS7(algorithms.AES.block_size).padder()
-#     padded_data = padder.update(password.encode()) + padder.finalize()
-    
-#     # Encrypt the padded password
-#     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-#     encryptor = cipher.encryptor()
-#     encrypted_password = encryptor.update(padded_data) + encryptor.finalize()
-    
-#     # Combine IV and encrypted password and encode with base64
-#     encrypted_data = base64.b64encode(iv + encrypted_password).decode()
-#     return encrypted_data
+print("current path: ", os.getcwd())
 
-# def decrypt_password(encrypted_data, secret_key_hex):
-#     # Convert the hex string to bytes
-#     print(11)
-#     key = bytes.fromhex(secret_key_hex)
-#     print(22)
-    
-#     # 因從secret取出來時base64已解碼
-#     # Decode the base64 encoded data
-#     encrypted_data = base64.b64decode(encrypted_data)
-    
-#     # Extract the IV and the encrypted password
-#     iv = encrypted_data[:16]
-#     print(33)
-#     encrypted_password = encrypted_data[16:]
-#     print(44)
-#     # Decrypt the password
-#     cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
-#     print(55)
-#     decryptor = cipher.decryptor()
-#     print(66)
-#     padded_password = decryptor.update(encrypted_password) + decryptor.finalize()
-#     print(77)
-    
-#     # Unpad the password
-#     unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
-#     print(88)
-#     password = unpadder.update(padded_password) + unpadder.finalize()
-#     print(99)
-#     return password.decode()
+# 切換目錄
+#os.chdir()
 
 def encrypt_password(password, secret_key_hex):
     # Convert the hex string to bytes
