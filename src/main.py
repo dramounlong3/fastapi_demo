@@ -15,6 +15,10 @@ from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
 import base64
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime, timedelta
+from apscheduler.triggers.interval import IntervalTrigger
+
 load_dotenv()
 
 hostname = socket.gethostname()
@@ -219,3 +223,32 @@ async def upload_excel(request: Request,
         
     else:
         raise HTTPException(status_code=400, detail="the file extension needs to be xlsx.")
+    
+    
+    
+    
+# 清理過期檔案的函數
+def period_job():
+    print("Executing job at:", datetime.now())
+
+# 設置排程器
+scheduler = BackgroundScheduler()
+# scheduler.add_job(period_job, 'cron', hour=2, minute=0)  # 每天凌晨2點執行
+scheduler.add_job(period_job, 'cron', minute='*') #每分鐘執行
+
+# 使用 IntervalTrigger 每 30 秒运行一次任务
+trigger = IntervalTrigger(seconds=5)
+scheduler.add_job(period_job, trigger=trigger)
+
+@app.on_event("startup")
+def on_startup():
+    # 確保應用啟動時排程器也一起啟動
+    if not scheduler.running:
+        print("start job first time")
+        scheduler.start()
+
+@app.on_event("shutdown")
+def on_shutdown():
+    # 確保應用關閉時排程器也一起關閉
+    print("finish job last time")
+    scheduler.shutdown()
