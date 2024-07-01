@@ -112,7 +112,38 @@ print("result_en_pwd", result_en_pwd)
 # print("final_result_pwd", final_result_pwd)
 
 
-app = FastAPI()
+# 清理過期檔案的函數
+def period_job():
+    print("Executing job at:", datetime.now())
+
+# 設置排程器
+scheduler = BackgroundScheduler()
+# scheduler.add_job(period_job, 'cron', hour=2, minute=0)  # 每天凌晨2點執行
+# scheduler.add_job(period_job, 'cron', minute='*') #每分鐘執行
+
+# 使用 IntervalTrigger 每 30 秒运行一次任务
+trigger = IntervalTrigger(seconds=3)
+scheduler.add_job(period_job, trigger=trigger)
+
+
+
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def mylifespan(app: FastAPI):
+    # 啟動時執行一次
+    if not scheduler.running:
+        print("start job first time")
+        scheduler.start()
+    yield
+    # 關閉時執行一次
+    print("finish job last time")
+    scheduler.shutdown()
+
+
+#將lifespan傳入到FastAPI的參數
+app = FastAPI(lifespan=mylifespan)
 app.mount("/static", StaticFiles(directory="./src/static"), name="static")
 templates = Jinja2Templates(directory="./src/templates")
 
@@ -227,28 +258,21 @@ async def upload_excel(request: Request,
     
     
     
-# 清理過期檔案的函數
-def period_job():
-    print("Executing job at:", datetime.now())
 
-# 設置排程器
-scheduler = BackgroundScheduler()
-# scheduler.add_job(period_job, 'cron', hour=2, minute=0)  # 每天凌晨2點執行
-scheduler.add_job(period_job, 'cron', minute='*') #每分鐘執行
 
-# 使用 IntervalTrigger 每 30 秒运行一次任务
-trigger = IntervalTrigger(seconds=5)
-scheduler.add_job(period_job, trigger=trigger)
+# @app.on_event("startup")
+# def on_startup():
+#     # 確保應用啟動時排程器也一起啟動
+#     if not scheduler.running:
+#         print("start job first time")
+#         scheduler.start()
 
-@app.on_event("startup")
-def on_startup():
-    # 確保應用啟動時排程器也一起啟動
-    if not scheduler.running:
-        print("start job first time")
-        scheduler.start()
-
-@app.on_event("shutdown")
-def on_shutdown():
-    # 確保應用關閉時排程器也一起關閉
-    print("finish job last time")
-    scheduler.shutdown()
+# @app.on_event("shutdown")
+# def on_shutdown():
+#     # 確保應用關閉時排程器也一起關閉
+#     print("finish job last time")
+#     scheduler.shutdown()
+    
+    
+    
+    
