@@ -18,8 +18,34 @@ import base64
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from apscheduler.triggers.interval import IntervalTrigger
+from copy import deepcopy
+
+from src.service import router as service_router
+from loguru import logger
+from src.another import svc
+import sys
+import src.config as gl
 
 load_dotenv()
+
+
+# 添加日志处理程序
+logger.add(
+    os.path.join("./log/", "fastapi_demo_{time:YYYY-MM-DD}.log"),  # 日志文件名包含日期
+    rotation="00:00",  # 每天0:00轮转
+    retention="7 day",  # 保留1天的日志
+    compression="tar.gz",  # 压缩为 .tar.gz 格式
+    level="DEBUG",  # 设置记录的最低日志级别
+)
+
+# # 将标准输出和标准错误重定向到同一个日志文件
+# logger.add(sys.stdout, level="INFO", format="{message}")
+# logger.add(sys.stderr, level="ERROR", format="{message}")
+
+# logger.add(os.path.join("./log/", "fastapi_demo_{time:YYYY-MM-DD}.log"), level="INFO")  # 将标准输出记录到同一个文件
+# logger.add(os.path.join("./log/", "fastapi_demo_{time:YYYY-MM-DD}.log"), level="ERROR")  # 将标准错误记录到同一个文件
+
+
 
 hostname = socket.gethostname()
 print(hostname)
@@ -30,9 +56,9 @@ print(sit_ip)
 print(uat_ip)
 print(prod_ip)
 
-my_server = os.getenv('REPORT_SERVER')
-my_user = os.getenv('DB_AD_ACCOUNT')
-secret_password = os.getenv('DB_PASSWORD')
+my_server = os.getenv('REPORT_SERVER', 'localhost')
+my_user = os.getenv('DB_AD_ACCOUNT', 'sa')
+secret_password = os.getenv('DB_PASSWORD', 'NmYzNjlkMWFmOTk2NTlmZDgxM2NiYTlmYTFmODkzM2E1MDI4ZjAyMTRjZDBlMDM2Y2IzOTMyZGRjNDNkNTI1NA==')
 # print("my_server", my_server)
 # print("my_user", my_user)
 # print("my_password", my_password)
@@ -81,7 +107,7 @@ def decrypt_password(encrypted_hex, secret_key_hex):
     
     # Decode the base64 string to hex string
     # k8s will decode base64 actively
-    # encrypted_hex = base64.b64decode(encrypted_base64).decode()
+    encrypted_hex = base64.b64decode(encrypted_hex).decode()
     
     # Convert the encrypted hex string back to bytes
     encrypted_data = bytes.fromhex(encrypted_hex)
@@ -122,7 +148,7 @@ scheduler = BackgroundScheduler()
 # scheduler.add_job(period_job, 'cron', minute='*') #每分鐘執行
 
 # 使用 IntervalTrigger 每 30 秒运行一次任务
-trigger = IntervalTrigger(seconds=3)
+trigger = IntervalTrigger(minutes=600)
 scheduler.add_job(period_job, trigger=trigger)
 
 
@@ -147,12 +173,16 @@ app = FastAPI(lifespan=mylifespan)
 app.mount("/static", StaticFiles(directory="./src/static"), name="static")
 templates = Jinja2Templates(directory="./src/templates")
 
+app.include_router(service_router, prefix="/service")
+
 @app.get('/')
 async def my():
     return {'var1': 'hello world!'}
 
 @app.get('/test', status_code=status.HTTP_200_OK)
 async def test(request: Request):
+    logger.info("logger.info in the test.")
+    print("print in the test.")
     return templates.TemplateResponse("index.html", {"request": request, "var1": {"text": "SOME INFO. FROM SERVER"}})
 
 @app.post('/upload', response_class=HTMLResponse)
@@ -160,6 +190,17 @@ async def upload_excel(request: Request,
                        upload_excel: UploadFile = File(...), 
                        username: str = Form(...), 
                        password: str = Form(...)):
+    gl._init()
+    config = gl.get_value()
+    
+    if username == "abc":
+        config["first_key"]["inner2"] = "aaa"
+        gl.set_value(config)
+        
+    print("username", username)
+    print("first_key", gl.get_value())
+    svc()
+    print("after first_key:", gl.get_value())
 
     if upload_excel.filename.endswith(".xlsx"):
         excel_content = await upload_excel.read()
@@ -222,7 +263,8 @@ async def upload_excel(request: Request,
             #使用windows認證登入
             # with pymssql.connect(host = 'TWTPESQLDV2', database = 'BI_ETL') as conn:
             #使用帳密登入
-            with pymssql.connect(server = my_var['my_server'], database = 'BI_Data_Alert', user = my_var['my_user'], password = my_var['my_password']) as conn:
+            # with pymssql.connect(server = my_var['my_server'], database = 'BI_Data_Alert', user = my_var['my_user'], password = my_var['my_password']) as conn:
+            with pymssql.connect(server = 'localhost', database = 'BI_Data_Alert', user = my_var['my_user'], password = my_var['my_password']) as conn:
             # with pymssql.connect(host = "172.21.176.1", user = "sa", password = "19890729", database = "BI_Data_Alert") as conn:
                 with conn.cursor() as cursor:
                     sql_query = '''
@@ -253,6 +295,7 @@ async def upload_excel(request: Request,
         return  json_data
         
     else:
+        logger.error("logger.error in the upload file.")
         raise HTTPException(status_code=400, detail="the file extension needs to be xlsx.")
     
     
